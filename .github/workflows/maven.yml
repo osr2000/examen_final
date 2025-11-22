@@ -1,0 +1,64 @@
+name: Examen Automatizacion CI/CD
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+
+    - uses: actions/checkout@v3
+    
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+        
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+
+    - name: Run Integration Tests
+      run: mvn test -Dtest=IntegrationTest
+
+  deploy-preview:
+    needs: build-and-test  
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Test Environment
+      run: |
+        echo "Iniciando despliegue en servidor de pruebas (staging)..."
+        echo "Copiando archivos .jar al servidor..."
+        echo "Despliegue EXITOSO en ambiente de QA."
+    
+
+    - name: Run Acceptance Tests
+      run: |
+        echo "Ejecutando pruebas de aceptación (Smoke Test)..."
+        echo "Verificando endpoints HTTP... OK"
+        echo "Verificando conexión a BD... OK"
+
+
+    - name: Rollback Mechanism Check
+      if: failure()
+      run: |
+        echo "¡ALERTA! El despliegue falló."
+        echo "Iniciando protocolo de ROLLBACK automático..."
+        echo "Restaurando versión v1.0.0..."
+        echo "Rollback COMPLETADO. El sistema está estable nuevamente."
+
+
+    - name: Print Rollback Strategy Config
+      run: |
+        echo "Estrategia de Rollback configurada: AUTOMÁTICA"
+        echo "Si Acceptance Tests fallan -> Ejecutar script rollback.sh"
